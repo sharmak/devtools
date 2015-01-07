@@ -13,6 +13,7 @@
 #' @param args A character vector providing extra arguments to pass on to
 #    svn.
 #' @param branch Name of branch or tag to use, if not trunk.
+#' @param add.trunk Add trunk to svn repository. By default this is True.
 #' @param ... Other arguments passed on to \code{\link{install}}
 #' @export
 #' @family package installation
@@ -21,20 +22,21 @@
 #' install_svn("https://github.com/hadley/stringr")
 #' install_svn("https://github.com/hadley/httr", branch = "oauth")
 #'}
-install_svn <- function(url, subdir = NULL, branch = NULL, args = character(0),
+install_svn <- function(url, subdir = NULL, branch = NULL, add.trunk = TRUE, args = character(0),
   ...) {
 
-  remotes <- lapply(url, svn_remote, subdir = subdir, branch = branch,
+  remotes <- lapply(url, svn_remote, subdir = subdir, branch = branch, add.trunk = add.trunk,
     args = args)
 
   install_remotes(remotes, ...)
 }
 
-svn_remote <- function(url, subdir = NULL, branch = NULL, args = character(0)) {
+svn_remote <- function(url, subdir = NULL, branch = NULL, add.trunk = TRUE, args = character(0)) {
   remote("svn",
     url = url,
     subdir = subdir,
     branch = branch,
+    add.trunk = add.trunk,
     args = args
   )
 }
@@ -51,8 +53,10 @@ remote_download.svn_remote <- function(x, quiet = FALSE) {
   args <- c('co')
   if (!is.null(x$branch)) {
     url <- file.path(x$url, "branches", x$branch)
-  } else {
+  } else if (isTRUE(x$add.trunk)) {
     url <- file.path(x$url, "trunk")
+  } else {
+    url <- file.path(x$url)
   }
   args <- c(args, x$args, url, bundle)
 
